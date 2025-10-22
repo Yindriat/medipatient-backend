@@ -1,0 +1,48 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: medipatient-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: medipatient
+      POSTGRES_USER: medipatient
+      POSTGRES_PASSWORD: medipatient123
+      PGDATA: /var/lib/postgresql/data/pgdata
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./docker/postgres/init:/docker-entrypoint-initdb.d
+    networks:
+      - medipatient-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U medipatient -d medipatient"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+  adminer:
+    image: adminer:4.8.1
+    container_name: medipatient-adminer
+    restart: unless-stopped
+    ports:
+      - "8081:8080"
+    environment:
+      ADMINER_DEFAULT_SERVER: postgres
+      ADMINER_DESIGN: pepa-linha
+    networks:
+      - medipatient-network
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+volumes:
+  postgres_data:
+    driver: local
+
+networks:
+  medipatient-network:
+    driver: bridge
