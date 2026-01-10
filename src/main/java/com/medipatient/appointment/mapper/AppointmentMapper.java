@@ -28,5 +28,11 @@ public interface AppointmentMapper {
     @Mapping(target = "version", ignore = true)
     Appointment toEntity(CreateAppointmentDto createAppointmentDto);
 
+    @Mapping(target = "id", ignore = true)
+    @Mapping(target = "patient", ignore = true)
+    @Mapping(target = "doctor", ignore = true)
+    @Mapping(target = "createdAt", ignore = true)
+    @Mapping(target = "updatedAt", ignore = true)
+    @Mapping(target = "version", ignore = true)
     void updateEntityFromDto(UpdateAppointmentDto updateAppointmentDto, @MappingTarget Appointment appointment);
 }

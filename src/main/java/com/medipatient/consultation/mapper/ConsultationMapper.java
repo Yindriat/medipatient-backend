@@ -29,5 +29,12 @@ public interface ConsultationMapper {
     @Mapping(target = "version", ignore = true)
     Consultation toEntity(CreateConsultationDto createConsultationDto);
 
+    @Mapping(target = "id", ignore = true)
+    @Mapping(target = "appointment", ignore = true)
+    @Mapping(target = "patient", ignore = true)
+    @Mapping(target = "doctor", ignore = true)
+    @Mapping(target = "createdAt", ignore = true)
+    @Mapping(target = "updatedAt", ignore = true)
+    @Mapping(target = "version", ignore = true)
     void updateEntityFromDto(UpdateConsultationDto updateConsultationDto, @MappingTarget Consultation consultation);
 }

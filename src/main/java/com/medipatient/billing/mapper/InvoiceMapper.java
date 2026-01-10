@@ -33,6 +33,13 @@ public interface InvoiceMapper {
     @Mapping(target = "totalPrice", expression = "java(itemDto.getQuantity() * itemDto.getUnitPrice())")
     Invoice.InvoiceItem itemToEntity(CreateInvoiceDto.InvoiceItemDto itemDto);
 
+    @Mapping(target = "id", ignore = true)
+    @Mapping(target = "invoiceNumber", ignore = true)
+    @Mapping(target = "patient", ignore = true)
+    @Mapping(target = "appointment", ignore = true)
+    @Mapping(target = "createdAt", ignore = true)
+    @Mapping(target = "updatedAt", ignore = true)
+    @Mapping(target = "version", ignore = true)
     void updateEntityFromDto(UpdateInvoiceDto updateInvoiceDto, @MappingTarget Invoice invoice);
 
     @Mapping(target = "totalPrice", expression = "java(itemDto.getQuantity() != null && itemDto.getUnitPrice() != null ? itemDto.getQuantity() * itemDto.getUnitPrice() : item.getTotalPrice())")

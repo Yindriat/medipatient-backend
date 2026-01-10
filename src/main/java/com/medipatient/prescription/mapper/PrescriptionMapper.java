@@ -35,6 +35,13 @@ public interface PrescriptionMapper {
 
     Prescription.Medication medicationToEntity(CreatePrescriptionDto.MedicationDto medicationDto);
 
+    @Mapping(target = "id", ignore = true)
+    @Mapping(target = "consultation", ignore = true)
+    @Mapping(target = "patient", ignore = true)
+    @Mapping(target = "doctor", ignore = true)
+    @Mapping(target = "createdAt", ignore = true)
+    @Mapping(target = "updatedAt", ignore = true)
+    @Mapping(target = "version", ignore = true)
     void updateEntityFromDto(UpdatePrescriptionDto updatePrescriptionDto, @MappingTarget Prescription prescription);
 
     Prescription.Medication updateMedicationFromDto(UpdatePrescriptionDto.MedicationDto medicationDto, @MappingTarget Prescription.Medication medication);

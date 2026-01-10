@@ -6,14 +6,12 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import io.swagger.v3.oas.annotations.tags.Tag;
 
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
 
 @RestController
-@Tag(name = "Santé", description = "Endpoints de monitoring et santé de l'application")
 @RequestMapping("/health")
 @Tag(name = "Health", description = "API de vérification de l'état de santé")
 public class HealthController {

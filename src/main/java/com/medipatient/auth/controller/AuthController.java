@@ -2,11 +2,13 @@ package com.medipatient.auth.controller;
 
 import com.medipatient.auth.dto.LoginRequestDto;
 import com.medipatient.auth.dto.LoginResponseDto;
+import com.medipatient.auth.dto.RegisterRequestDto;
 import com.medipatient.auth.service.JwtAuthService;
 import com.medipatient.profile.dto.ProfileDto;
 import com.medipatient.profile.model.Profile;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -29,6 +31,13 @@ public class AuthController {
     public ResponseEntity<LoginResponseDto> login(@Valid @RequestBody LoginRequestDto loginRequest) {
         LoginResponseDto response = jwtAuthService.loginWithJwt(loginRequest);
         return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/register")
+    @Operation(summary = "Inscription patient", description = "Crée un nouveau compte patient et génère un token JWT")
+    public ResponseEntity<LoginResponseDto> register(@Valid @RequestBody RegisterRequestDto registerRequest) {
+        LoginResponseDto response = jwtAuthService.registerPatient(registerRequest);
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
     @PostMapping("/logout")

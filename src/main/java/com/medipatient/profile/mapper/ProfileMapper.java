@@ -21,5 +21,11 @@ public interface ProfileMapper {
     @Mapping(target = "version", ignore = true)
     Profile toEntity(CreateProfileDto createProfileDto);
 
+    @Mapping(target = "id", ignore = true)
+    @Mapping(target = "password", ignore = true)
+    @Mapping(target = "role", ignore = true)
+    @Mapping(target = "createdAt", ignore = true)
+    @Mapping(target = "updatedAt", ignore = true)
+    @Mapping(target = "version", ignore = true)
     void updateEntityFromDto(UpdateProfileDto updateProfileDto, @MappingTarget Profile profile);
 }

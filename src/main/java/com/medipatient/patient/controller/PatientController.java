@@ -21,7 +21,7 @@ import java.util.UUID;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
 @RestController
-@RequestMapping("/api/patients")
+@RequestMapping("/patients")
 @RequiredArgsConstructor
 @Tag(name = "Patients", description = "Gestion des patients")
 public class PatientController {

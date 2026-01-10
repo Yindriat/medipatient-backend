@@ -19,5 +19,9 @@ public interface SpecialtyMapper {
     @Mapping(target = "version", ignore = true)
     Specialty toEntity(CreateSpecialtyDto createSpecialtyDto);
 
+    @Mapping(target = "id", ignore = true)
+    @Mapping(target = "createdAt", ignore = true)
+    @Mapping(target = "updatedAt", ignore = true)
+    @Mapping(target = "version", ignore = true)
     void updateEntityFromDto(CreateSpecialtyDto updateSpecialtyDto, @MappingTarget Specialty specialty);
 }

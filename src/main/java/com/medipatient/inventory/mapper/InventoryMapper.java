@@ -27,5 +27,9 @@ public interface InventoryMapper {
     @Mapping(target = "version", ignore = true)
     Inventory toEntity(CreateInventoryDto createInventoryDto);
 
+    @Mapping(target = "id", ignore = true)
+    @Mapping(target = "createdAt", ignore = true)
+    @Mapping(target = "updatedAt", ignore = true)
+    @Mapping(target = "version", ignore = true)
     void updateEntityFromDto(CreateInventoryDto updateInventoryDto, @MappingTarget Inventory inventory);
 }

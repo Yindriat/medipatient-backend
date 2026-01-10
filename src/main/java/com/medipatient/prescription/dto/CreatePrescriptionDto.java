@@ -1,6 +1,5 @@
 package com.medipatient.prescription.dto;
 
-import com.medipatient.prescription.model.Prescription;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;

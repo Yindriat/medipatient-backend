@@ -3,7 +3,7 @@ spring:
     name: medipatient-backend
   
   datasource:
-    url: jdbc:postgresql://localhost:5432/medipatient
+    url: jdbc:postgresql://localhost:5433/medipatient
     username: ${DB_USERNAME:medipatient}
     password: ${DB_PASSWORD:medipatient123}
     driver-class-name: org.postgresql.Driver
@@ -15,9 +15,9 @@ spring:
     database-platform: org.hibernate.dialect.PostgreSQLDialect
     properties:
       hibernate:
-        format_sql: true
+        "[format_sql]": true
         jdbc:
-          time_zone: UTC
+          "[time_zone]": UTC
   
   flyway:
     enabled: true
@@ -28,7 +28,7 @@ spring:
   security:
     jwt:
       secret: ${JWT_SECRET:myVeryLongSecretKeyForMediPatientApplicationThatIsAtLeast256BitsLong1234567890}
-      expiration: 86400000 # 24 hours
+      expiration: 86400000 # 24 heures
   
   jackson:
     serialization:
@@ -49,9 +49,9 @@ management:
 
 logging:
   level:
-    com.medipatient: DEBUG
-    org.springframework.security: DEBUG
-    org.hibernate.SQL: DEBUG
+    "[com.medipatient]": DEBUG
+    "[org.springframework.security]": DEBUG
+    "[org.hibernate.SQL]": DEBUG
 
 # Configuration OpenAPI/Swagger
 springdoc:

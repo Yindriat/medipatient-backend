@@ -1,6 +1,5 @@
 package com.medipatient.admin.service;
 
-import com.medipatient.auth.service.JwtAuthService;
 import com.medipatient.profile.dto.CreateProfileDto;
 import com.medipatient.profile.dto.ProfileDto;
 import com.medipatient.profile.dto.UpdateProfileDto;
@@ -17,7 +16,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -28,7 +26,6 @@ public class AdminUserService {
 
     private final ProfileRepository profileRepository;
     private final ProfileService profileService;
-    private final JwtAuthService authService;
     private final PasswordEncoder passwordEncoder;
 
     /**

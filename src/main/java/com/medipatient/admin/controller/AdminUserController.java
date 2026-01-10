@@ -24,7 +24,7 @@ import java.util.UUID;
 @RequestMapping("/api/admin/users")
 @RequiredArgsConstructor
 @Tag(name = "Administration des utilisateurs", description = "Gestion des utilisateurs par les administrateurs")
-@SecurityRequirement(name = "bearerAuth")
+@SecurityRequirement(name = "bearerAuth") 
 @PreAuthorize("hasRole('ADMIN')")
 public class AdminUserController {
 
@@ -107,13 +107,4 @@ public class AdminUserController {
         return ResponseEntity.ok(stats);
     }
 
-    // Endpoints pour la gestion des sessions par admin
-    @GetMapping("/{userId}/sessions")
-    @Operation(summary = "Sessions d'un utilisateur", description = "Récupère toutes les sessions actives d'un utilisateur")
-    public ResponseEntity<Object> getUserSessions(@PathVariable UUID userId) {
-        // TODO: Implémenter via AuthService
-        return ResponseEntity.ok().build();
-    }
-
-   
 }

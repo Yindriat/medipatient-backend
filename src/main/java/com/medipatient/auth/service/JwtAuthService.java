@@ -2,17 +2,18 @@ package com.medipatient.auth.service;
 
 import com.medipatient.auth.dto.LoginRequestDto;
 import com.medipatient.auth.dto.LoginResponseDto;
+import com.medipatient.auth.dto.RegisterRequestDto;
 import com.medipatient.auth.exception.AuthenticationException;
+import com.medipatient.patient.model.Patient;
+import com.medipatient.patient.repository.PatientRepository;
 import com.medipatient.profile.model.Profile;
 import com.medipatient.profile.dto.ProfileDto;
 import com.medipatient.profile.repository.ProfileRepository;
-import com.medipatient.profile.mapper.ProfileMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -32,9 +33,9 @@ import java.util.Optional;
 public class JwtAuthService {
 
     private final ProfileRepository profileRepository;
+    private final PatientRepository patientRepository;
     private final PasswordEncoder passwordEncoder;
     private final AuthenticationManager authenticationManager;
-    private final ProfileMapper profileMapper;
     private final JwtService jwtService;
     private final UserDetailsServiceImpl userDetailsService;
 
@@ -55,7 +56,7 @@ public class JwtAuthService {
             }
 
             // Authentification avec Spring Security
-            Authentication authentication = authenticationManager.authenticate(
+            authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(
                             loginRequest.getEmail(),
                             loginRequest.getPassword()
@@ -165,5 +166,102 @@ public class JwtAuthService {
      */
     public String extractUsername(String token) {
         return jwtService.extractUsername(token);
+    }
+
+    /**
+     * Inscrit un nouveau patient et génère un token JWT
+     */
+    @Transactional
+    public LoginResponseDto registerPatient(RegisterRequestDto registerRequest) {
+        log.debug("Tentative d'inscription pour: {}", registerRequest.getEmail());
+
+        // Validation des données d'entrée
+        if (registerRequest.getEmail() == null || registerRequest.getEmail().trim().isEmpty()) {
+            throw new AuthenticationException("L'email est requis");
+        }
+        if (registerRequest.getPassword() == null || registerRequest.getPassword().trim().isEmpty()) {
+            throw new AuthenticationException("Le mot de passe est requis");
+        }
+        if (registerRequest.getFirstName() == null || registerRequest.getFirstName().trim().isEmpty()) {
+            throw new AuthenticationException("Le prénom est requis");
+        }
+        if (registerRequest.getLastName() == null || registerRequest.getLastName().trim().isEmpty()) {
+            throw new AuthenticationException("Le nom est requis");
+        }
+
+        // Vérifier si l'email existe déjà
+        if (profileRepository.findByEmail(registerRequest.getEmail()).isPresent()) {
+            log.warn("Tentative d'inscription avec un email déjà existant: {}", registerRequest.getEmail());
+            throw new AuthenticationException("Un compte avec cet email existe déjà");
+        }
+
+        try {
+            // Création du profil utilisateur
+            Profile profile = Profile.builder()
+                    .firstName(registerRequest.getFirstName().trim())
+                    .lastName(registerRequest.getLastName().trim())
+                    .email(registerRequest.getEmail().toLowerCase().trim())
+                    .phone(registerRequest.getPhone() != null ? registerRequest.getPhone().trim() : null)
+                    .password(passwordEncoder.encode(registerRequest.getPassword()))
+                    .role(Profile.Role.PATIENT)
+                    .enabled(true)
+                    .build();
+
+            Profile savedProfile = profileRepository.save(profile);
+            log.info("Profil créé avec succès pour: {} (ID: {})", savedProfile.getEmail(), savedProfile.getId());
+
+            // Création de l'enregistrement patient associé
+            Patient patient = Patient.builder()
+                    .user(savedProfile)
+                    .build();
+
+            Patient savedPatient = patientRepository.save(patient);
+            log.info("Enregistrement patient créé avec succès (ID: {})", savedPatient.getId());
+
+            // Génération du token JWT pour auto-login après inscription
+            UserDetails userDetails = userDetailsService.loadUserByUsername(savedProfile.getEmail());
+            
+            Map<String, Object> extraClaims = new HashMap<>();
+            extraClaims.put("userId", savedProfile.getId().toString());
+            extraClaims.put("role", savedProfile.getRole().toString());
+            extraClaims.put("firstName", savedProfile.getFirstName());
+            extraClaims.put("lastName", savedProfile.getLastName());
+            extraClaims.put("patientId", savedPatient.getId().toString());
+            
+            String jwtToken = jwtService.generateToken(extraClaims, userDetails);
+
+            // Calcul de l'expiration
+            Date expirationDate = jwtService.extractExpiration(jwtToken);
+            LocalDateTime expiresAt = expirationDate.toInstant()
+                    .atZone(ZoneId.systemDefault())
+                    .toLocalDateTime();
+
+            log.info("Inscription réussie pour: {} ({})", savedProfile.getEmail(), savedProfile.getRole());
+
+            return LoginResponseDto.builder()
+                    .sessionId(jwtToken)
+                    .user(ProfileDto.builder()
+                            .id(savedProfile.getId())
+                            .firstName(savedProfile.getFirstName())
+                            .lastName(savedProfile.getLastName())
+                            .email(savedProfile.getEmail())
+                            .phone(savedProfile.getPhone())
+                            .role(savedProfile.getRole())
+                            .enabled(savedProfile.getEnabled())
+                            .createdAt(savedProfile.getCreatedAt())
+                            .updatedAt(savedProfile.getUpdatedAt())
+                            .build())
+                    .expiresAt(expiresAt)
+                    .rememberMe(false)
+                    .message("Inscription réussie")
+                    .loginTime(LocalDateTime.now())
+                    .build();
+
+        } catch (AuthenticationException e) {
+            throw e;
+        } catch (Exception e) {
+            log.error("Erreur lors de l'inscription: {}", e.getMessage(), e);
+            throw new AuthenticationException("Erreur lors de l'inscription: " + e.getMessage());
+        }
     }
 }

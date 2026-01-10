@@ -26,6 +26,11 @@ public interface DoctorMapper {
     @Mapping(target = "version", ignore = true)
     Doctor toEntity(CreateDoctorDto createDoctorDto);
 
+    @Mapping(target = "id", ignore = true)
+    @Mapping(target = "user", ignore = true)
     @Mapping(target = "specialty", ignore = true)
+    @Mapping(target = "createdAt", ignore = true)
+    @Mapping(target = "updatedAt", ignore = true)
+    @Mapping(target = "version", ignore = true)
     void updateEntityFromDto(UpdateDoctorDto updateDoctorDto, @MappingTarget Doctor doctor);
 }
