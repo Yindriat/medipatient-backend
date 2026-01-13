@@ -21,6 +21,29 @@ import java.util.UUID;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
 @RestController
+package com.medipatient.patient.controller;
+
+import com.medipatient.patient.dto.CreatePatientDto;
+import com.medipatient.patient.dto.PatientDto;
+import com.medipatient.patient.dto.UpdatePatientDto;
+import com.medipatient.patient.model.Patient;
+import com.medipatient.patient.service.PatientService;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
+import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import java.time.LocalDate;
+import java.util.List;
+import java.util.UUID;
+import io.swagger.v3.oas.annotations.tags.Tag;
+
+@RestController
 @RequestMapping("/patients")
 @RequiredArgsConstructor
 @Tag(name = "Patients", description = "Gestion des patients")
@@ -78,32 +101,7 @@ public class PatientController {
     public ResponseEntity<PatientDto> updatePatient(@PathVariable UUID id, 
                                                    @Valid @RequestBody UpdatePatientDto updatePatientDto) {
         try {
-            PatientDto updatedPatient = patientService.updatePatient(id, updatePatientDto);
-            return ResponseEntity.ok(updatedPatient);
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().build();
-        }
-    }
-
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deletePatient(@PathVariable UUID id) {
-        try {
-            patientService.deletePatient(id);
-            return ResponseEntity.noContent().build();
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.notFound().build();
-        }
-    }
-
-    @GetMapping("/blood-type/{bloodType}")
-    public ResponseEntity<List<PatientDto>> getPatientsByBloodType(@PathVariable String bloodType) {
-        List<PatientDto> patients = patientService.getPatientsByBloodType(bloodType);
-        return ResponseEntity.ok(patients);
-    }
-
-    @GetMapping("/allergy/{allergy}")
-    public ResponseEntity<List<PatientDto>> getPatientsByAllergy(@PathVariable String allergy) {
-        List<PatientDto> patients = patientService.getPatientsByAllergy(allergy);
+            // ...existing code...
         return ResponseEntity.ok(patients);
     }
 
