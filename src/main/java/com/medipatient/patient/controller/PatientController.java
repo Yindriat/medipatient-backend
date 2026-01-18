@@ -21,29 +21,6 @@ import java.util.UUID;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
 @RestController
-package com.medipatient.patient.controller;
-
-import com.medipatient.patient.dto.CreatePatientDto;
-import com.medipatient.patient.dto.PatientDto;
-import com.medipatient.patient.dto.UpdatePatientDto;
-import com.medipatient.patient.model.Patient;
-import com.medipatient.patient.service.PatientService;
-import jakarta.validation.Valid;
-import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.web.PageableDefault;
-import org.springframework.format.annotation.DateTimeFormat;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
-
-import java.time.LocalDate;
-import java.util.List;
-import java.util.UUID;
-import io.swagger.v3.oas.annotations.tags.Tag;
-
-@RestController
 @RequestMapping("/patients")
 @RequiredArgsConstructor
 @Tag(name = "Patients", description = "Gestion des patients")
@@ -59,9 +36,9 @@ public class PatientController {
             @RequestParam(required = false) String bloodType,
             @RequestParam(required = false) Integer minAge,
             @RequestParam(required = false) Integer maxAge) {
-        
+
         Page<PatientDto> patients;
-        
+
         if (search != null) {
             patients = patientService.searchPatients(search, pageable);
         } else if (gender != null || bloodType != null || minAge != null || maxAge != null) {
@@ -69,7 +46,7 @@ public class PatientController {
         } else {
             patients = patientService.getAllPatients(pageable);
         }
-        
+
         return ResponseEntity.ok(patients);
     }
 
@@ -98,18 +75,21 @@ public class PatientController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<PatientDto> updatePatient(@PathVariable UUID id, 
+    public ResponseEntity<PatientDto> updatePatient(@PathVariable UUID id,
                                                    @Valid @RequestBody UpdatePatientDto updatePatientDto) {
         try {
-            // ...existing code...
-        return ResponseEntity.ok(patients);
+            PatientDto updatedPatient = patientService.updatePatient(id, updatePatientDto);
+            return ResponseEntity.ok(updatedPatient);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().build();
+        }
     }
 
     @GetMapping("/birth-date-range")
     public ResponseEntity<List<PatientDto>> getPatientsByDateOfBirthRange(
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
-        
+
         List<PatientDto> patients = patientService.getPatientsByDateOfBirthRange(startDate, endDate);
         return ResponseEntity.ok(patients);
     }

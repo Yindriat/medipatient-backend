@@ -108,12 +108,49 @@ public class JwtAuthService {
                             .build())
                     .expiresAt(expiresAt)
                     .rememberMe(false) // Non applicable avec JWT
-                    ...existing code...
-            log.warn("Tentative d'inscription avec un email déjà existant: {}", registerRequest.getEmail());
-            throw new AuthenticationException("Un compte avec cet email existe déjà");
-        }
+                    .message("Connexion réussie")
+                    .loginTime(LocalDateTime.now())
+                    .build();
 
+        } catch (BadCredentialsException e) {
+            log.warn("Échec d'authentification pour l'utilisateur: {}", loginRequest.getEmail());
+            throw new AuthenticationException("Email ou mot de passe incorrect");
+        } catch (AuthenticationException e) {
+            throw e;
+        } catch (Exception e) {
+            log.error("Erreur lors de la connexion: {}", e.getMessage(), e);
+            throw new AuthenticationException("Erreur lors de la connexion");
+        }
+    }
+
+    /**
+     * Inscrit un nouveau patient et génère un token JWT
+     */
+    @Transactional
+    public LoginResponseDto registerPatient(RegisterRequestDto registerRequest) {
         try {
+            log.debug("Tentative d'inscription pour: {}", registerRequest.getEmail());
+
+            // Validation des données d'entrée
+            if (registerRequest.getEmail() == null || registerRequest.getEmail().trim().isEmpty()) {
+                throw new AuthenticationException("L'email est requis");
+            }
+            if (registerRequest.getPassword() == null || registerRequest.getPassword().trim().isEmpty()) {
+                throw new AuthenticationException("Le mot de passe est requis");
+            }
+            if (registerRequest.getFirstName() == null || registerRequest.getFirstName().trim().isEmpty()) {
+                throw new AuthenticationException("Le prénom est requis");
+            }
+            if (registerRequest.getLastName() == null || registerRequest.getLastName().trim().isEmpty()) {
+                throw new AuthenticationException("Le nom est requis");
+            }
+
+            // Vérification que l'email n'existe pas déjà
+            if (profileRepository.findByEmail(registerRequest.getEmail().toLowerCase().trim()).isPresent()) {
+                log.warn("Tentative d'inscription avec un email déjà existant: {}", registerRequest.getEmail());
+                throw new AuthenticationException("Un compte avec cet email existe déjà");
+            }
+
             // Création du profil utilisateur
             Profile profile = Profile.builder()
                     .firstName(registerRequest.getFirstName().trim())
@@ -138,14 +175,14 @@ public class JwtAuthService {
 
             // Génération du token JWT pour auto-login après inscription
             UserDetails userDetails = userDetailsService.loadUserByUsername(savedProfile.getEmail());
-            
+
             Map<String, Object> extraClaims = new HashMap<>();
             extraClaims.put("userId", savedProfile.getId().toString());
             extraClaims.put("role", savedProfile.getRole().toString());
             extraClaims.put("firstName", savedProfile.getFirstName());
             extraClaims.put("lastName", savedProfile.getLastName());
             extraClaims.put("patientId", savedPatient.getId().toString());
-            
+
             String jwtToken = jwtService.generateToken(extraClaims, userDetails);
 
             // Calcul de l'expiration
@@ -181,5 +218,9 @@ public class JwtAuthService {
             log.error("Erreur lors de l'inscription: {}", e.getMessage(), e);
             throw new AuthenticationException("Erreur lors de l'inscription: " + e.getMessage());
         }
+    }
+
+    public Optional<Profile> getCurrentUser(String email) {
+        return profileRepository.findByEmail(email);
     }
 }
