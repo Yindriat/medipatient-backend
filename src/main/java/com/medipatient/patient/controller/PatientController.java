@@ -36,9 +36,9 @@ public class PatientController {
             @RequestParam(required = false) String bloodType,
             @RequestParam(required = false) Integer minAge,
             @RequestParam(required = false) Integer maxAge) {
-
+        
         Page<PatientDto> patients;
-
+        
         if (search != null) {
             patients = patientService.searchPatients(search, pageable);
         } else if (gender != null || bloodType != null || minAge != null || maxAge != null) {
@@ -46,7 +46,7 @@ public class PatientController {
         } else {
             patients = patientService.getAllPatients(pageable);
         }
-
+        
         return ResponseEntity.ok(patients);
     }
 
@@ -75,7 +75,7 @@ public class PatientController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<PatientDto> updatePatient(@PathVariable UUID id,
+    public ResponseEntity<PatientDto> updatePatient(@PathVariable UUID id, 
                                                    @Valid @RequestBody UpdatePatientDto updatePatientDto) {
         try {
             PatientDto updatedPatient = patientService.updatePatient(id, updatePatientDto);
@@ -85,11 +85,33 @@ public class PatientController {
         }
     }
 
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deletePatient(@PathVariable UUID id) {
+        try {
+            patientService.deletePatient(id);
+            return ResponseEntity.noContent().build();
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.notFound().build();
+        }
+    }
+
+    @GetMapping("/blood-type/{bloodType}")
+    public ResponseEntity<List<PatientDto>> getPatientsByBloodType(@PathVariable String bloodType) {
+        List<PatientDto> patients = patientService.getPatientsByBloodType(bloodType);
+        return ResponseEntity.ok(patients);
+    }
+
+    @GetMapping("/allergy/{allergy}")
+    public ResponseEntity<List<PatientDto>> getPatientsByAllergy(@PathVariable String allergy) {
+        List<PatientDto> patients = patientService.getPatientsByAllergy(allergy);
+        return ResponseEntity.ok(patients);
+    }
+
     @GetMapping("/birth-date-range")
     public ResponseEntity<List<PatientDto>> getPatientsByDateOfBirthRange(
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
-
+        
         List<PatientDto> patients = patientService.getPatientsByDateOfBirthRange(startDate, endDate);
         return ResponseEntity.ok(patients);
     }
@@ -104,5 +126,14 @@ public class PatientController {
     public ResponseEntity<List<Object[]>> getBloodTypeStatistics() {
         List<Object[]> stats = patientService.getBloodTypeStatistics();
         return ResponseEntity.ok(stats);
+    }
+
+    @GetMapping("/doctor/{doctorUserId}")
+    public ResponseEntity<Page<PatientDto>> getPatientsByDoctor(
+            @PathVariable UUID doctorUserId,
+            @PageableDefault(size = 20, sort = "user.lastName") Pageable pageable) {
+
+        Page<PatientDto> patients = patientService.getPatientsByDoctorUserId(doctorUserId, pageable);
+        return ResponseEntity.ok(patients);
     }
 }

@@ -36,10 +36,9 @@ timeout /t 10 /nobreak >nul
 REM Verification du statut
 docker-compose ps
 
-echo.
 echo ========================================
 echo Services disponibles :
-echo - PostgreSQL  : localhost:5432
+echo - PostgreSQL  : localhost:5433
 echo - Adminer     : http://localhost:8081
 echo ========================================
 echo.

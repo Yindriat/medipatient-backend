@@ -113,76 +113,135 @@ public class JwtAuthService {
                     .build();
 
         } catch (BadCredentialsException e) {
-            log.warn("Échec d'authentification pour l'utilisateur: {}", loginRequest.getEmail());
-            throw new AuthenticationException("Email ou mot de passe incorrect");
-        } catch (AuthenticationException e) {
-            throw e;
+            log.warn("Échec de connexion pour l'utilisateur: {} - Identifiants incorrects", loginRequest.getEmail());
+            throw new AuthenticationException("Identifiants incorrects");
         } catch (Exception e) {
-            log.error("Erreur lors de la connexion: {}", e.getMessage(), e);
-            throw new AuthenticationException("Erreur lors de la connexion");
+            log.error("Erreur lors de la connexion pour l'utilisateur: {} - {}", loginRequest.getEmail(), e.getMessage());
+            throw new AuthenticationException("Erreur de connexion");
         }
     }
 
     /**
-     * Inscrit un nouveau patient et génère un token JWT
+     * Récupère les informations de l'utilisateur connecté
+     */
+    @Transactional(readOnly = true)
+    public Optional<Profile> getCurrentUser(String email) {
+        return profileRepository.findByEmail(email);
+    }
+
+    /**
+     * Change le mot de passe d'un utilisateur
      */
     @Transactional
-    public LoginResponseDto registerPatient(RegisterRequestDto registerRequest) {
+    public void changePassword(String email, String oldPassword, String newPassword) {
+        Profile profile = profileRepository.findByEmail(email)
+                .orElseThrow(() -> new AuthenticationException("Utilisateur non trouvé"));
+
+        // Vérifier l'ancien mot de passe
+        if (!passwordEncoder.matches(oldPassword, profile.getPassword())) {
+            throw new AuthenticationException("Ancien mot de passe incorrect");
+        }
+
+        // Encoder et sauvegarder le nouveau mot de passe
+        profile.setPassword(passwordEncoder.encode(newPassword));
+        profileRepository.save(profile);
+
+        log.info("Mot de passe modifié pour l'utilisateur: {}", email);
+    }
+
+    /**
+     * Valide un token JWT
+     */
+    public boolean validateToken(String token) {
         try {
-            log.debug("Tentative d'inscription pour: {}", registerRequest.getEmail());
+            return jwtService.validateToken(token);
+        } catch (Exception e) {
+            log.warn("Token JWT invalide: {}", e.getMessage());
+            return false;
+        }
+    }
 
-            // Validation des données d'entrée
-            if (registerRequest.getEmail() == null || registerRequest.getEmail().trim().isEmpty()) {
-                throw new AuthenticationException("L'email est requis");
-            }
-            if (registerRequest.getPassword() == null || registerRequest.getPassword().trim().isEmpty()) {
-                throw new AuthenticationException("Le mot de passe est requis");
-            }
-            if (registerRequest.getFirstName() == null || registerRequest.getFirstName().trim().isEmpty()) {
-                throw new AuthenticationException("Le prénom est requis");
-            }
-            if (registerRequest.getLastName() == null || registerRequest.getLastName().trim().isEmpty()) {
-                throw new AuthenticationException("Le nom est requis");
-            }
+    /**
+     * Extrait l'email/username du token
+     */
+    public String extractUsername(String token) {
+        return jwtService.extractUsername(token);
+    }
 
-            // Vérification que l'email n'existe pas déjà
-            if (profileRepository.findByEmail(registerRequest.getEmail().toLowerCase().trim()).isPresent()) {
-                log.warn("Tentative d'inscription avec un email déjà existant: {}", registerRequest.getEmail());
-                throw new AuthenticationException("Un compte avec cet email existe déjà");
-            }
+    /**
+     * Inscrit un nouvel utilisateur (patient ou médecin) et génère un token JWT
+     */
+    @Transactional
+    public LoginResponseDto registerUser(RegisterRequestDto registerRequest) {
+        log.debug("Tentative d'inscription pour: {}", registerRequest.getEmail());
 
+        // Validation des données d'entrée
+        if (registerRequest.getEmail() == null || registerRequest.getEmail().trim().isEmpty()) {
+            throw new AuthenticationException("L'email est requis");
+        }
+        if (registerRequest.getPassword() == null || registerRequest.getPassword().trim().isEmpty()) {
+            throw new AuthenticationException("Le mot de passe est requis");
+        }
+        if (registerRequest.getFirstName() == null || registerRequest.getFirstName().trim().isEmpty()) {
+            throw new AuthenticationException("Le prénom est requis");
+        }
+        if (registerRequest.getLastName() == null || registerRequest.getLastName().trim().isEmpty()) {
+            throw new AuthenticationException("Le nom est requis");
+        }
+
+        // Vérifier si l'email existe déjà
+        if (profileRepository.findByEmail(registerRequest.getEmail()).isPresent()) {
+            log.warn("Tentative d'inscription avec un email déjà existant: {}", registerRequest.getEmail());
+            throw new AuthenticationException("Un compte avec cet email existe déjà");
+        }
+
+        try {
             // Création du profil utilisateur
+            Profile.Role userRole = Profile.Role.PATIENT; // Default
+            if (registerRequest.getRole() != null) {
+                try {
+                    userRole = Profile.Role.valueOf(registerRequest.getRole());
+                } catch (IllegalArgumentException e) {
+                    log.warn("Rôle invalide fourni: {}, utilisation du rôle PATIENT par défaut", registerRequest.getRole());
+                }
+            }
+            
             Profile profile = Profile.builder()
                     .firstName(registerRequest.getFirstName().trim())
                     .lastName(registerRequest.getLastName().trim())
                     .email(registerRequest.getEmail().toLowerCase().trim())
                     .phone(registerRequest.getPhone() != null ? registerRequest.getPhone().trim() : null)
                     .password(passwordEncoder.encode(registerRequest.getPassword()))
-                    .role(Profile.Role.PATIENT)
+                    .role(userRole)
                     .enabled(true)
                     .build();
 
             Profile savedProfile = profileRepository.save(profile);
             log.info("Profil créé avec succès pour: {} (ID: {})", savedProfile.getEmail(), savedProfile.getId());
 
-            // Création de l'enregistrement patient associé
-            Patient patient = Patient.builder()
-                    .user(savedProfile)
-                    .build();
+            // Création de l'enregistrement patient associé seulement si c'est un patient
+            Patient savedPatient = null;
+            if (userRole == Profile.Role.PATIENT) {
+                Patient patient = Patient.builder()
+                        .user(savedProfile)
+                        .build();
 
-            Patient savedPatient = patientRepository.save(patient);
-            log.info("Enregistrement patient créé avec succès (ID: {})", savedPatient.getId());
+                savedPatient = patientRepository.save(patient);
+                log.info("Enregistrement patient créé avec succès (ID: {})", savedPatient.getId());
+            }
 
             // Génération du token JWT pour auto-login après inscription
             UserDetails userDetails = userDetailsService.loadUserByUsername(savedProfile.getEmail());
-
+            
             Map<String, Object> extraClaims = new HashMap<>();
             extraClaims.put("userId", savedProfile.getId().toString());
             extraClaims.put("role", savedProfile.getRole().toString());
             extraClaims.put("firstName", savedProfile.getFirstName());
             extraClaims.put("lastName", savedProfile.getLastName());
-            extraClaims.put("patientId", savedPatient.getId().toString());
-
+            if (savedPatient != null) {
+                extraClaims.put("patientId", savedPatient.getId().toString());
+            }
+            
             String jwtToken = jwtService.generateToken(extraClaims, userDetails);
 
             // Calcul de l'expiration
@@ -218,9 +277,5 @@ public class JwtAuthService {
             log.error("Erreur lors de l'inscription: {}", e.getMessage(), e);
             throw new AuthenticationException("Erreur lors de l'inscription: " + e.getMessage());
         }
-    }
-
-    public Optional<Profile> getCurrentUser(String email) {
-        return profileRepository.findByEmail(email);
     }
 }

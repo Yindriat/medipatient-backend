@@ -9,8 +9,9 @@ import org.springframework.security.config.annotation.method.configuration.Enabl
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
-import com.medipatient.auth.service.UserDetailsServiceImpl;
 import com.medipatient.auth.filter.JwtAuthenticationFilter;
+import com.medipatient.auth.service.JwtService;
+import com.medipatient.auth.service.UserDetailsServiceImpl;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
@@ -37,10 +38,8 @@ public class SecurityConfig {
     }
 
     @Bean
-    public DaoAuthenticationProvider authenticationProvider(UserDetailsServiceImpl userDetailsService) {
-        DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider(userDetailsService);
-        authProvider.setPasswordEncoder(passwordEncoder());
-        return authProvider;
+    public JwtAuthenticationFilter jwtAuthenticationFilter(JwtService jwtService, UserDetailsServiceImpl userDetailsService) {
+        return new JwtAuthenticationFilter(jwtService, userDetailsService);
     }
 
     @Bean

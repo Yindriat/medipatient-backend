@@ -51,12 +51,12 @@ public interface PatientRepository extends JpaRepository<Patient, UUID> {
     @Query("SELECT COUNT(p) FROM Patient p WHERE p.gender = :gender")
     long countByGender(@Param("gender") Patient.Gender gender);
 
-       @Query("SELECT p.bloodType, COUNT(p) FROM Patient p WHERE p.bloodType IS NOT NULL GROUP BY p.bloodType")
-       List<Object[]> countByBloodType();
+    @Query("SELECT p.bloodType, COUNT(p) FROM Patient p WHERE p.bloodType IS NOT NULL GROUP BY p.bloodType")
+    List<Object[]> countByBloodType();
 
-       @Query("SELECT DISTINCT p FROM Patient p " +
-                 "JOIN Consultation c ON c.patient = p " +
-                 "JOIN c.doctor d " +
-                 "WHERE d.user.id = :doctorUserId")
-       Page<Patient> findPatientsByDoctorUserId(@Param("doctorUserId") UUID doctorUserId, Pageable pageable);
+    @Query("SELECT DISTINCT p FROM Patient p " +
+           "JOIN Consultation c ON c.patient = p " +
+           "JOIN c.doctor d " +
+           "WHERE d.user.id = :doctorUserId")
+    Page<Patient> findPatientsByDoctorUserId(@Param("doctorUserId") UUID doctorUserId, Pageable pageable);
 }

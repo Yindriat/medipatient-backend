@@ -34,9 +34,9 @@ public class AuthController {
     }
 
     @PostMapping("/register")
-    @Operation(summary = "Inscription patient", description = "Crée un nouveau compte patient et génère un token JWT")
+    @Operation(summary = "Inscription utilisateur", description = "Crée un nouveau compte utilisateur (patient ou médecin) et génère un token JWT")
     public ResponseEntity<LoginResponseDto> register(@Valid @RequestBody RegisterRequestDto registerRequest) {
-        LoginResponseDto response = jwtAuthService.registerPatient(registerRequest);
+        LoginResponseDto response = jwtAuthService.registerUser(registerRequest);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
@@ -52,7 +52,7 @@ public class AuthController {
     public ResponseEntity<ProfileDto> getCurrentUser() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String email = authentication.getName();
-
+        
         Optional<Profile> currentUser = jwtAuthService.getCurrentUser(email);
         if (currentUser.isPresent()) {
             return ResponseEntity.ok(ProfileDto.builder()
@@ -67,7 +67,7 @@ public class AuthController {
                     .updatedAt(currentUser.get().getUpdatedAt())
                     .build());
         }
-
+        
         return ResponseEntity.notFound().build();
     }
 }

@@ -37,4 +37,6 @@ public class RegisterRequestDto {
     
     @Pattern(regexp = "^(\\+?[0-9]{10,15})?$", message = "Le numéro de téléphone doit être valide")
     private String phone;
+    
+    private String role;
 }
