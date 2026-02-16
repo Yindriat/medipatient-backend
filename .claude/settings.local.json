@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(/Users/martialkital/Downloads/medipatient-medic-main/src/**)",
+      "Read(/Users/martialkital/Downloads/medipatient-medic-main/src/types/**)",
+      "Read(/Users/martialkital/Downloads/medipatient-medic-main/src/types/**)",
+      "Read(/Users/martialkital/Downloads/medipatient-medic-main/src/types/**)",
+      "Read(/Users/martialkital/Downloads/medipatient-medic-main/src/types/**)",
+      "Bash(find:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
