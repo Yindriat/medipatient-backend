@@ -78,6 +78,8 @@ public class SecurityConfig {
                         .requestMatchers("/api/patient/**").hasAnyRole("ADMIN", "DOCTOR", "PATIENT")
                         .requestMatchers("/api/agent/**").hasAnyRole("ADMIN", "AGENT")
 
+                        .requestMatchers("/api/notifications/**").authenticated() // Nécessite un Token
+
                         // E. Tout le reste nécessite d'être connecté
                         .anyRequest().authenticated()
                 )
